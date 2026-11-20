@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>affect_interfaces</name>
+  <version>0.1.0</version>
+  <description>Message definitions for human affect (valence/arousal) estimates.</description>
+  <maintainer email="noreply@yale.edu">sm3532</maintainer>
+  <license>Yale</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>rclpy</depend>
+  <depend>shutter_description</depend>
+  <depend>shutter_face_ros</depend>
+  <!-- shutter.launch.py and demo_mock.launch.py include its
+       shutter_control.launch.py; it was used but never declared. -->
+  <depend>shutter_hardware_interface</depend>
+  <!-- shutter_sim.launch.py wraps its shutter_mujoco.launch.py. The MuJoCo-specific
+       knowledge lives there, so shutter_description and shutter_hardware_interface
+       stay simulator-free; see shutter_mujoco_sim/doc/MUJOCO-NOTES.md section 13. -->
+  <exec_depend>shutter_mujoco_sim</exec_depend>
+  <!-- demo_mock.launch.py starts RViz. -->
+  <exec_depend>rviz2</exec_depend>
+  <depend>usb_cam</depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
