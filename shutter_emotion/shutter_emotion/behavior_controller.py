@@ -21,7 +21,10 @@ from affect_interfaces.msg import AffectScore
 
 RATE_HZ = 20.0      # control loop rate
 DEADBAND = 0.33     # |x| < DEADBAND -> 0, otherwise sign(x)
-W_AUDIO = 0.75      # weight of audio vs visual when both detect someone
+
+#how heavily to weigh audio versus visual input when both are detected
+# Final performance accuracies of each node's model may influence this
+W_AUDIO = 0.75
 W_VISUAL = 0.25
 
 # Shutter's joints, from the URDF (shutter_description/urdf/third_party/widowx-nogripper.v.2.0.urdf.xacro)
