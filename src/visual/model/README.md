@@ -1,0 +1,6 @@
+Training the model through the OMG-Emotion dataset comes with different complexities. Unlike other visual datasets, the dataset is open source through youtube which allows for accessibility but also means there are blockers to training the dataset. Firstly, the annotations are sometimes incorrect, causing for noise. Secondly, the valence and arousal scores are created through both the visual and audio input, causing for noise. Finally, as the videos come from youtube, Youtube can block you from accessing the videos, and some videos have also been deleted off the internet. To navigate around the issue with Youtube blocking you from the videos, we created cookies to showcase that we are not bots, which is helpful, but still tedious (foreshadowing to step 2).
+To train a new model for visual emotion detection (in Google Colab):
+1. Create a folder `omg_emotion_shutter/` in Google Drive (`MyDrive/omg_emotion_shutter/`).
+2.  Export cookies.txt from YouTube (using a cookie scraper extension) and upload it to `MyDrive/omg_emotion_shutter/cookies.txt`.
+3. Run all cells in the .ipynb file in Google Colab (these are through google Colab as the videos must be manually downloaded and Colab allows for temporary files)
+5. The trained model will be saved in `MyDrive/omg_emotion_shutter/`!
