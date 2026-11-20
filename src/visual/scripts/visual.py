@@ -12,11 +12,8 @@ from rclpy.qos import qos_profile_sensor_data
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from emotion_interfaces.msg import VisualScore
-try: #run on gpu
-    from facenet_pytorch import MTCNN
-    HAS_MTCNN = True
-except ImportError:
-    HAS_MTCNN = False
+from facenet_pytorch import MTCNN
+
 
 class ResNet50OMGVisualVA(nn.Module):
     def __init__(self, dropout=0.45):
@@ -68,12 +65,8 @@ class VisualNode(Node):
         self.model.load_state_dict(state, strict=True)
         self.model.eval()
         print(f"making sure model loaded on {self.device} head {tuple(state['va_head.4.weight'].shape)}")
-        if HAS_MTCNN:
-            self.detector = MTCNN(keep_all=False, device=self.device)
-            print("face detector loaded: MTCNN")
-        else:
-            self.detector = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
-            print("face detector loaded: OpenCV Haar fallback")
+        self.detector = MTCNN(keep_all=False, device=self.device)
+    #debating keeping MTCNN
 
         self.bridge = CvBridge()
         self.buffer = deque()
@@ -101,23 +94,16 @@ class VisualNode(Node):
 
     def find_face_box(self, frame_bgr: np.ndarray):
         h_img, w_img = frame_bgr.shape[:2]
-        if HAS_MTCNN: 
-            frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-            boxes, probs = self.detector.detect(frame_rgb)
-            if boxes is None or len(boxes) == 0:
-                return None
-            valid = [b for b, p in zip(boxes, probs) if p is not None and p >= 0.85]
-            if not valid:
-                return None
-            areas = [(b[2] - b[0]) * (b[3] - b[1]) for b in valid]
-            x1, y1, x2, y2 = valid[int(np.argmax(areas))]
-        else:
-            gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
-            faces = self.detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40))
-            if len(faces) == 0:
-                return None
-            x, y, w, h = max(faces, key=lambda b: b[2] * b[3])
-            x1, y1, x2, y2 = x, y, x + w, y + h
+        frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        boxes, probs = self.detector.detect(frame_rgb)
+        if boxes is None or len(boxes) == 0:
+            return None
+        valid = [b for b, p in zip(boxes, probs) if p is not None and p >= 0.85]
+        if not valid:
+            return None
+        areas = [(b[2] - b[0]) * (b[3] - b[1]) for b in valid]
+        x1, y1, x2, y2 = valid[int(np.argmax(areas))]
+        
         w, h= x2 - x1, y2 - y1 #lots of cropping
         x1 = max(0, int(x1 - 0.12 * w))
         y1 = max(0, int(y1 - 0.15 * h))
@@ -135,19 +121,6 @@ class VisualNode(Node):
         frame_bgr = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         box = self.find_face_box(frame_bgr)
 
-        # if self.debug_pub.get_subscription_count() > 0:
-        #     debug_img = frame_bgr.copy()
-        #     if box is not None:
-        #         cv2.rectangle(debug_img, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
-        #         cv2.putText(debug_img, "FACE DETECTED", (box[0], max(20, box[1] - 8)),
-        #                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-        #     else:
-        #         cv2.putText(debug_img, "NO FACE", (20, 35),
-        #                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-        #     out_debug = self.bridge.cv2_to_imgmsg(debug_img, encoding="bgr8")
-        #     out_debug.header = msg.header
-        #     self.debug_pub.publish(out_debug)
-        
         if box is None :# no face found, reset buffer
             self.face_present = False
             self.buffer.clear()
